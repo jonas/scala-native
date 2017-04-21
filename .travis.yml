@@ -46,6 +46,8 @@ matrix:
         - brew link bdw-gc
         - brew install jq
         - brew install re2
+        - brew install llvm
+      env: PATH="$PATH:/usr/local/opt/llvm/bin"
 
 env:
   global:
