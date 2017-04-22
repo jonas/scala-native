@@ -21,7 +21,7 @@ toolchain.
 Installing LLVM, Clang and Boehm GC
 -----------------------------------
 
-Boehm GC and LLVM (that includes Clang) are Scala Native's only external
+Boehm GC and LLVM version 3.7 or newer (that includes Clang) are Scala Native's only external
 dependencies. Here are install instructions for a number of operating
 systems Scala Native has been used with:
 
