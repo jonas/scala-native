@@ -127,26 +127,18 @@ object ScalaNativePluginInternal {
       clang
     },
     nativeCompileOptions := {
-      val includes = {
-        val includedir =
-          Try(Process("llvm-config --includedir").lines_!.toSeq)
-            .getOrElse(Seq.empty)
-        ("/usr/local/include" +: includedir).map(s => s"-I$s")
-      }
-      includes :+ "-Qunused-arguments" :+
+      val includes =
+        ("/usr/local/include" +: llvmConfig("--includedir")).map(s => s"-I$s")
+      includes ++ envOptions("CFLAGS") :+ "-Qunused-arguments" :+
         (mode(nativeMode.value) match {
           case tools.Mode.Debug   => "-O0"
           case tools.Mode.Release => "-O2"
         })
     },
     nativeLinkingOptions := {
-      val libs = {
-        val libdir =
-          Try(Process("llvm-config --libdir").lines_!.toSeq)
-            .getOrElse(Seq.empty)
-        ("/usr/local/lib" +: libdir).map(s => s"-L$s")
-      }
-      libs
+      val libs =
+        ("/usr/local/lib" +: llvmConfig("--includedir")).map(s => s"-L$s")
+      libs ++ envOptions("LDFLAGS")
     },
     nativeTarget := {
       val logger = nativeLogger.value
@@ -483,6 +475,12 @@ object ScalaNativePluginInternal {
       throw new MessageOnlyException(
         "nativeGC can be either \"none\" or \"boehm\", not: " + value)
   }
+
+  private def envOptions(envVar: String): Seq[String] =
+    sys.env.getOrElse(envVar, "").trim.split("\\s+")
+
+  private def llvmConfig(option: String): Seq[String] =
+    Try(Seq("llvm-config", option).lines_!.toList).getOrElse(Seq.empty)
 
   /**
    * Removes all files specific to other gcs.

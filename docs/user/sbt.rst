@@ -48,15 +48,34 @@ Since Name                     Type            Description
 0.1   ``nativeLink``           ``File``        Link NIR and generate native binary
 0.1   ``nativeClang``          ``File``        Path to ``clang`` command
 0.1   ``nativeClangPP``        ``File``        Path to ``clang++`` command
-0.1   ``nativeCompileOptions`` ``Seq[String]`` Extra options passed to clang verbatim during compilation
-0.1   ``nativeLinkingOptions`` ``Seq[String]`` Extra options passed to clang verbatim during linking
-0.1   ``nativeMode``           ``String``      Either ``"debug"`` or ``"release"`` (2)
-0.2   ``nativeGC``             ``String``      Either ``"none"`` or ``"boehm"`` (3)
+0.1   ``nativeCompileOptions`` ``Seq[String]`` Extra options passed to clang verbatim during compilation (2)
+0.1   ``nativeLinkingOptions`` ``Seq[String]`` Extra options passed to clang verbatim during linking (2)
+0.1   ``nativeMode``           ``String``      Either ``"debug"`` or ``"release"`` (3)
+0.2   ``nativeGC``             ``String``      Either ``"none"`` or ``"boehm"`` (4)
 ===== ======================== =============== =========================================================
 
 1. See `Publishing`_ and `Cross compilation`_ for details.
-2. See `Compilation modes`_ for details.
-3. See `Garbage collectors`_ for details.
+2. See `Compile and linking options`_ for details.
+3. See `Compilation modes`_ for details.
+4. See `Garbage collectors`_ for details.
+
+Compile and linking options
+---------------------------
+
+By default ``/usr/local/include`` as well as directories listed by ``llvm-config
+--includedir`` are added to the search path for include files. Similarly, by
+default ``/usr/local/lib`` as well as directories listed by ``llvm-config
+--includedir`` are added to the search path for library files. 
+
+In addition, ``CFLAGS`` and ``LDFLAGS`` which are commonly used to by ``make``,
+are automatically included in ``nativeCompileOptions`` and
+``nativeLinkingOptions`` respectively.
+
+If for example you have installed a library to ``$HOME``, add the following to
+your shell environment to automatically use those libraries from Scala Native::
+
+    export CFLAGS="$CFLAGS -I$HOME/include"
+    export LDFLAGS="$LDFLAGS -L$HOME/include"
 
 Compilation modes
 -----------------
@@ -111,7 +130,7 @@ Cross compilation
 sbt plugin that lets you cross-compile your projects against all three major
 platforms in Scala: JVM, JavaScript via Scala.js and native via Scala Native.
 It's based on the original cross-project idea from Scala.js and supports the
-same syntax for existing JVM/JavaScript cross-projects. Please refer to project's
+same syntax for existing JVM/JavaScript cross-projects. Please refer to the project's
 `README <https://github.com/scala-native/sbt-crossproject/blob/master/README.md>`_
 for details.
 
