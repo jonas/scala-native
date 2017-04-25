@@ -362,19 +362,18 @@ lazy val bindgen =
       libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % Test,
       sourceGenerators in Compile += Def.task {
         val logger   = nativeLogger.value
-        val cwd      = nativeWorkdir.value
         val compiler = nativeClang.value.getAbsolutePath
         val cpath    = (resourceDirectory in Compile).value / "clang.c"
         val spath    = (sourceManaged in Compile).value / "Clang.scala"
         val pprocess = Seq(compiler, "-DSCALA", "-E", cpath.toString)
-        val lines    = Process(pprocess, cwd) lines_! logger
+        val lines    = Process(pprocess, target.value) lines_! logger
 
+        logger.info(s"Generating $cpath from $spath")
         IO.write(spath, lines.filterNot(_.startsWith("#")).mkString("\n"))
         Seq(spath)
       }.taskValue,
       nativeCompileLL += {
         val logger   = nativeLogger.value
-        val cwd      = nativeWorkdir.value
         val compiler = nativeClang.value.getAbsolutePath
         val opts     = nativeCompileOptions.value
         val cpath    = (resourceDirectory in Compile).value / "clang.c"
@@ -384,9 +383,10 @@ lazy val bindgen =
                                                     "-o",
                                                     opath.toString)
 
-        val exitCode = Process(compilec, cwd) ! logger
+        logger.info(s"Compiling $cpath to $opath using options: ${opts}")
+        val exitCode = Process(compilec, target.value) ! logger
         if (exitCode != 0) {
-          println("Failed to compile " + cpath)
+          logger.error("Failed to compile " + cpath)
         }
         opath
       }
