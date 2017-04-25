@@ -128,8 +128,7 @@ object ScalaNativePluginInternal {
     },
     nativeCompileOptions := {
       val includes = {
-        val includedir =
-          llvmConfig(nativeClang.value.getParentFile, "--includedir")
+        val includedir = llvmConfig(nativeClang.value, "--includedir")
         ("/usr/local/include" +: includedir).map(s => s"-I$s")
       }
       includes :+ "-Qunused-arguments" :+
@@ -139,8 +138,9 @@ object ScalaNativePluginInternal {
         })
     },
     nativeLinkingOptions := {
+      streams.value.log.info(s"Looking for llvm-config in ${nativeClang.value.getParentFile} because ${nativeClang.value}")
       val libs = {
-        val libdir = llvmConfig(nativeClang.value.getParentFile, "--libdir")
+        val libdir = llvmConfig(nativeClang.value, "--libdir")
         ("/usr/local/lib" +: libdir).map(s => s"-L$s")
       }
       libs
@@ -482,11 +482,12 @@ object ScalaNativePluginInternal {
         "nativeGC can be either \"none\" or \"boehm\", not: " + value)
   }
 
-  private def llvmConfig(binDir: File, option: String): Seq[String] = {
+  private def llvmConfig(clang: File, option: String): Seq[String] = {
+    val tools = Seq(clang.getName.replace("clang-", "llvm-config-"), "llvm-config")
+      .map(name => new File(clang.getParentFile, name))
     val result =
       for {
-        tools      <- Option(binDir.listFiles)
-        llvmConfig <- tools.find(_.getName.startsWith("llvm-config"))
+        llvmConfig <- tools.find(_.exists)
         dirs       <- Try(Seq(llvmConfig.toString, option).lines_!).toOption
       } yield dirs.toList
 
