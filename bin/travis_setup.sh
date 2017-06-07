@@ -13,32 +13,39 @@ if [ "$(uname)" == "Darwin" ]; then
 
 else
 
-    # Install LLVM/Clang 3.7, Boehm GC, libunwind
-    sudo apt-get -qq update
-    sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main' >> /etc/apt/sources.list"
-    sudo sh -c "echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise main' >> /etc/apt/sources.list"
-    wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+    # Install Boehm GC, libunwind
     sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
     sudo apt-get -qq update
     sudo apt-get install -y \
-      clang++-3.7 \
-      llvm-3.7 \
-      llvm-3.7-dev \
-      llvm-3.7-runtime \
-      llvm-3.7-tool \
       libgc-dev \
       libunwind7-dev
 
+    # Install LLVM/Clang
+    export LLVM_VERSION=3.7.1
+    export LLVM_ARCH="x86_64-linux-gnu-ubuntu-14.04"
+    export LLVM_HOME="$HOME/llvm/$LLVM_VERSION"
+
+    if [ ! -e "$LLVM_HOME.tar.xz" ]; then
+      wget -O "$LLVM_HOME.tar.xz" "http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-$LLVM_ARCH.tar.xz"
+    fi
+    tar -xvf "$LLVM_HOME.tar.xz" --strip 1 -C "$LLVM_HOME"
+    export PATH="$LLVM_HOME/bin:$PATH"
+
     # Install re2
     # Starting from Ubuntu 16.04 LTS, it'll be available as http://packages.ubuntu.com/xenial/libre2-dev
-    sudo apt-get install -y make
-    export CXX=clang++-3.7
-    git clone https://code.googlesource.com/re2
-    pushd re2
-    git checkout 2017-03-01
-    make -j4 test
-    sudo make install prefix=/usr
-    make testinstall prefix=/usr
-    popd
+    export RE2_VERSION=2017-03-01
+    export RE2_HOME="$HOME/re2"
+
+    if [ ! -e "$RE2_HOME" ]; then
+      export CXX="$LLVM_HOME/bin/clang++"
+      sudo apt-get install -y make
+      git clone --branch "$RE2_VERSION" https://code.googlesource.com/re2 src/re2
+      pushd src/re2
+      make -j4 test
+      make install prefix="$RE2_HOME"
+      make testinstall prefix="$RE2_HOME"
+      popd
+    fi
+    sudo cp -a "$RE2_HOME"/* /usr
 
 fi

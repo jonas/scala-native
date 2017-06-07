@@ -54,3 +54,5 @@ cache:
     - $HOME/.coursier
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot/
+    - $HOME/llvm
+    - $HOME/re2
